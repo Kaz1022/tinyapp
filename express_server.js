@@ -2,12 +2,11 @@ const express = require('express');
 const app = express();
 const PORT = 8080; //default port 8080
 const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
 function generateRandomString() {
-  const randomString = Math.random().toString(32).substring(2, 5) + Math.random().toString(32).substring(2,5);
+  const randomString = Math.random().toString(32).substring(2, 5) + Math.random().toString(32).substring(2, 5);
   return randomString;
 };
 
@@ -38,13 +37,26 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
+// create random string when we recieve the POST request to /urls
+// it responds with a redirection to /urls/:shortURL
 app.post('/urls', (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL;
+
+  urlDatabase[shortURL] = longURL;
+
+  console.log(urlDatabase);
+  res.redirect(`/urls/${shortURL}`);
+});
+
+// redirect any request to /u/:shortURL to its longURL
+app.get('/u/:shortURL', (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
 
