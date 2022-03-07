@@ -26,7 +26,7 @@ const urlDatabase = {
 };
 
 // Store User Info
-const userDatabase = {
+const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
@@ -39,15 +39,11 @@ const userDatabase = {
   }
 };
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-
-// rendering shortURLs and longURLs & username cookie to urls_index
+// rendering URLs & entire user object
 app.get('/urls', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies.username
+    user: users[req.cookies.user_id],
   };
   res.render("urls_index", templateVars);
 });
@@ -61,10 +57,10 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// rendering to url_new username cookie 
+// rendering to url_new userId cookie 
 app.get('/urls/new', (req, res) => {
   const templateVars = {
-    username: req.cookies.username
+    user: users[req.cookies.user_id]
   };
   res.render("urls_new", templateVars);
 });
@@ -75,7 +71,8 @@ app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL],
-    username: req.cookies.username
+    user: users[req.cookies.user_id]
+    
   };
   res.render("urls_show", templateVars);
 });
@@ -102,37 +99,36 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
-// create an endpoint to handle a POST to /login
-// also create cookie with username 🍪
+// create an endpoint to handle a POST to LOGIN
+// also create cookie with user_ID 🍪 ???????????????????
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
-});
-
-// logout/clear cookie
-app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.cookie('user_id', req.body.id);
   res.redirect('/urls');
 });
 
 // render to register page
 app.get('/register', (req, res) => {
   const templateVars = {
-    username: req.cookies.username
+    user: users[req.cookies.user_id]
   };
   res.render('urls_registration', templateVars);
 });
 
-// POST endpoint to register users
+// POST endpoint to register user
 app.post('/register', (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  userDatabase[userId] = { id: userId, email, password};
+  users[userId] = { id: userId, email, password};
   res.cookie('user_id', userId);
-  console.log(userDatabase);
+  console.log(users);
   res.redirect('/urls');
 });
 
+// LOGOUT/clear cookie 
+app.post('/logout', (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/urls');
+});
 
 
