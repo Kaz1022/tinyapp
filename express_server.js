@@ -38,7 +38,7 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}; 
+};
 
 // Checking if the User email exists or not
 function checkEmail(userObj, input) {
@@ -144,7 +144,7 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  
+
   if (!email || !password) {
     res.statusCode = 400;
     res.send("You need to fill out both forms.");
@@ -159,27 +159,25 @@ app.post('/login', (req, res) => {
   // if the email doesn't exist
   if (!emailExists) {
     res.statusCode = 403;
-    res.send("You don't have an account with this email.")
+    res.send("You don't have an account with this email.");
     return;
   }
 
   // if the password doesn't match
   if (emailExists && !passwordExists) {
     res.statusCode = 403;
-    res.send("Your passowrd doesn't match.")
+    res.send("Your passowrd doesn't match.");
     return;
   }
 
   // if the email and password matches
   if (emailExists && passwordExists) {
+    // cookie is the user object key = id
     res.cookie('user_id', fetchUserId(users, email));
-    
     res.redirect('/urls');
   }
 
-
 });
-
 
 // render to register page
 app.get('/register', (req, res) => {
@@ -220,9 +218,7 @@ app.post('/register', (req, res) => {
     res.redirect('/urls');
     return;
   }
-
 });
-
 
 // LOGOUT/clear cookie 
 app.post('/logout', (req, res) => {
