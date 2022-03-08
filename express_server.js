@@ -19,6 +19,7 @@ function generateRandomString() {
   return randomString;
 };
 
+
 // base database for URL
 const urlDatabase = {
   // "b2xVn2": "http://www.lighthouselabs.ca",
@@ -36,6 +37,16 @@ const users = {
     id: "user2RandomID",
     email: "user2@example.com",
     passowrd: "dishwasher-funk"
+  }
+};
+
+// Checking it the email exist or not
+function checkEmail(input) {
+  for (const key in users) {
+    if (users[key].email === input) {
+      return true;
+    }
+    return false;
   }
 };
 
@@ -72,7 +83,7 @@ app.get('/urls/:shortURL', (req, res) => {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL],
     user: users[req.cookies.user_id]
-    
+
   };
   res.render("urls_show", templateVars);
 });
@@ -102,7 +113,7 @@ app.get('/u/:shortURL', (req, res) => {
 // create an endpoint to handle a POST to LOGIN
 // also create cookie with user_ID 🍪 ???????????????????
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.id);
+  res.cookie('user_id', req.body.email);
   res.redirect('/urls');
 });
 
@@ -119,11 +130,32 @@ app.post('/register', (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  users[userId] = { id: userId, email, password};
-  res.cookie('user_id', userId);
-  console.log(users);
-  res.redirect('/urls');
-});
+
+  // create new user object if it's new
+  // Handling error, if the form is empty
+  if (!email || !password) {
+    res.statusCode = 400;
+    res.send("You need to fill out both forms.");
+    return;
+  }
+
+  // if the email already exists
+  if(checkEmail(email)) {
+    res.statusCode = 400;
+    res.send("You already have an account with this email.");
+    return;
+  }
+
+  // if the email is new
+  if (!checkEmail(email)) {
+    users[userId] = { id: userId, email, password };
+    res.cookie('user_id', userId);
+    console.log(users);
+    res.redirect('/urls');
+    return;
+  }
+
+ });
 
 // LOGOUT/clear cookie 
 app.post('/logout', (req, res) => {
