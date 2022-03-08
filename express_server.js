@@ -130,10 +130,17 @@ app.get('/u/:shortURL', (req, res) => {
 
 // render to login page
 app.get('/login', (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id]
-  };
-  res.render('urls_login', templateVars);
+
+  // if users logged in redirect to urls
+  if (req.cookies.user_id === undefined) {
+    const templateVars = {
+      user: users[req.cookies.user_id]
+    };
+    res.render('urls_login', templateVars);
+  } else {
+    res.redirect('/urls');
+  }
+
 });
 
 // create an endpoint to handle a POST to LOGIN
@@ -176,12 +183,17 @@ app.post('/login', (req, res) => {
 
 });
 
-// render to register page
+// render to register page, if logged in redirect /urls
 app.get('/register', (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id]
-  };
-  res.render('urls_registration', templateVars);
+  if (req.cookies.user_id === undefined) {
+    const templateVars = {
+      user: users[req.cookies.user_id]
+    };
+    res.render('urls_registration', templateVars);
+  } else {
+    res.redirect('/urls');
+  }
+
 });
 
 // POST endpoint to register user
