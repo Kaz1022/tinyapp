@@ -82,6 +82,13 @@ app.get('/urls', (req, res) => {
 // create random string when we recieve the POST request to /urls
 // it responds with a redirection to /urls/:shortURL
 app.post('/urls', (req, res) => {
+  // none logged in user cannot add a new url with POST request
+  if (req.cookies.user_id === undefined) {
+    res.statusCode = 400;
+    res.send("You need to be logged in to use this feature.");
+    return;
+  }
+
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
@@ -90,6 +97,13 @@ app.post('/urls', (req, res) => {
 
 // rendering to url_new userId cookie 
 app.get('/urls/new', (req, res) => {
+
+  //redirect to login page if user is not looged in
+  if (req.cookies.user_id === undefined) {
+    res.redirect('/login');
+    return;
+  }
+
   const templateVars = {
     user: users[req.cookies.user_id]
   };
