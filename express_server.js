@@ -41,13 +41,13 @@ const users = {
 };
 
 // Checking it the email exist or not
-function checkEmail(input) {
-  for (const key in users) {
-    if (users[key].email === input) {
+function checkEmail(userObj, input) {
+  for (const key in userObj) {
+    if (userObj[key].email === input) {
       return true;
     }
-    return false;
   }
+  return false;
 };
 
 // rendering URLs & entire user object
@@ -140,14 +140,14 @@ app.post('/register', (req, res) => {
   }
 
   // if the email already exists
-  if(checkEmail(email)) {
+  if(checkEmail(users, email)) {
     res.statusCode = 400;
     res.send("You already have an account with this email.");
     return;
   }
 
   // if the email is new
-  if (!checkEmail(email)) {
+  if (!checkEmail(users, email)) {
     users[userId] = { id: userId, email, password };
     res.cookie('user_id', userId);
     console.log(users);
