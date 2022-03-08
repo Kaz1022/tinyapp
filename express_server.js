@@ -98,7 +98,6 @@ app.get('/urls/new', (req, res) => {
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  console.log(urlDatabase[shortURL]);
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL],
@@ -112,7 +111,6 @@ app.get('/urls/:shortURL', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = req.body.longURL;
-  console.log(urlDatabase);
   res.redirect(`/urls`);
 });
 
@@ -130,7 +128,6 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
-
 // render to login page
 app.get('/login', (req, res) => {
   const templateVars = {
@@ -140,7 +137,6 @@ app.get('/login', (req, res) => {
 });
 
 // create an endpoint to handle a POST to LOGIN
-// also create cookie with user_ID 🍪 ???????????????????
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -171,6 +167,7 @@ app.post('/login', (req, res) => {
   }
 
   // if the email and password matches
+  // create cookie with the user id🍪
   if (emailExists && passwordExists) {
     // cookie is the user object key = id
     res.cookie('user_id', fetchUserId(users, email));
@@ -214,7 +211,6 @@ app.post('/register', (req, res) => {
   if (!emailExists) {
     users[userId] = { id: userId, email, password };
     res.cookie('user_id', userId);
-    console.log(users);
     res.redirect('/urls');
     return;
   }
