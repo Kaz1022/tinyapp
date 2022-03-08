@@ -60,6 +60,16 @@ function checkPassword(userObj, input) {
   return false;
 };
 
+// Checking the key of the object which matches the email
+function fetchUserId(userObj, input) {
+  for (const key in userObj) {
+    if (userObj[key].email === input) {
+      return key;
+    }
+  }
+  return undefined;
+}
+
 // rendering URLs & entire user object
 app.get('/urls', (req, res) => {
   const templateVars = {
@@ -141,27 +151,32 @@ app.post('/login', (req, res) => {
     return;
   }
 
+  // Store checkEmail/checkPassword functions into variables so that 
+  // the function doesn't have to run every time
+  const emailExists = checkEmail(users, email);
+  const passwordExists = checkPassword(users, password);
+
   // if the email doesn't exist
-  if (!checkEmail(users, email)) {
+  if (!emailExists) {
     res.statusCode = 403;
     res.send("You don't have an account with this email.")
     return;
   }
 
   // if the password doesn't match
-  if (checkEmail(users, email) && !checkPassword(users, password)) {
+  if (emailExists && !passwordExists) {
     res.statusCode = 403;
-    console.log(checkPassword(users, password));
     res.send("Your passowrd doesn't match.")
     return;
   }
 
   // if the email and password matches
-  if (checkEmail(users, email) && checkPassword(users, password)) {
-    
+  if (emailExists && passwordExists) {
+    res.cookie('user_id', fetchUserId(users, email));
     
     res.redirect('/urls');
   }
+
 
 });
 
@@ -188,15 +203,17 @@ app.post('/register', (req, res) => {
     return;
   }
 
+  const emailExists = checkEmail(users, email);
+
   // if the email already exists
-  if (checkEmail(users, email)) {
+  if (emailExists) {
     res.statusCode = 400;
     res.send("You already have an account with this email.");
     return;
   }
 
   // if the email is new
-  if (!checkEmail(users, email)) {
+  if (!emailExists) {
     users[userId] = { id: userId, email, password };
     res.cookie('user_id', userId);
     console.log(users);
