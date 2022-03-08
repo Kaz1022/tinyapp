@@ -31,19 +31,29 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    passowrd: "purple-monkey-dinosaur"
+    password: "purple-monkey-dinosaur"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    passowrd: "dishwasher-funk"
+    password: "dishwasher-funk"
   }
-};
+}; 
 
-// Checking it the email exist or not
+// Checking if the User email exists or not
 function checkEmail(userObj, input) {
   for (const key in userObj) {
     if (userObj[key].email === input) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// Checking if the User passowrd exists or not
+function checkPassword(userObj, input) {
+  for (const key in userObj) {
+    if (userObj[key].password === input) {
       return true;
     }
   }
@@ -110,12 +120,51 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
+
+// render to login page
+app.get('/login', (req, res) => {
+  const templateVars = {
+    user: users[req.cookies.user_id]
+  };
+  res.render('urls_login', templateVars);
+});
+
 // create an endpoint to handle a POST to LOGIN
 // also create cookie with user_ID 🍪 ???????????????????
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.email);
-  res.redirect('/urls');
+  const email = req.body.email;
+  const password = req.body.password;
+  
+  if (!email || !password) {
+    res.statusCode = 400;
+    res.send("You need to fill out both forms.");
+    return;
+  }
+
+  // if the email doesn't exist
+  if (!checkEmail(users, email)) {
+    res.statusCode = 403;
+    res.send("You don't have an account with this email.")
+    return;
+  }
+
+  // if the password doesn't match
+  if (checkEmail(users, email) && !checkPassword(users, password)) {
+    res.statusCode = 403;
+    console.log(checkPassword(users, password));
+    res.send("Your passowrd doesn't match.")
+    return;
+  }
+
+  // if the email and password matches
+  if (checkEmail(users, email) && checkPassword(users, password)) {
+    
+    
+    res.redirect('/urls');
+  }
+
 });
+
 
 // render to register page
 app.get('/register', (req, res) => {
@@ -140,7 +189,7 @@ app.post('/register', (req, res) => {
   }
 
   // if the email already exists
-  if(checkEmail(users, email)) {
+  if (checkEmail(users, email)) {
     res.statusCode = 400;
     res.send("You already have an account with this email.");
     return;
@@ -155,7 +204,8 @@ app.post('/register', (req, res) => {
     return;
   }
 
- });
+});
+
 
 // LOGOUT/clear cookie 
 app.post('/logout', (req, res) => {

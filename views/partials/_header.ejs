@@ -19,11 +19,13 @@
           <button type="submit" class="btn btn-outline-dark">LOGOUT</button>
         </form>
         <% } else { %>
-        <!-- LOGIN -->  
-          <form class="form-inline col-13" action="/login" method="POST">
-            <input class="form-control" type="email" name="email" placeholder="email">
-            <button type="submit" class="btn btn-outline-dark ml-2">Login</button>
-          </form>
+          <!-- LOGIN -->
+          <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class = "navbar-nav">
+              <a class="nav-item nav-link" href="/login">Login</a>
+              <a class="nav-item nav-link" href="/register">Register</a>
+            </div>
+          </div>
           <% } %>
     </div>
   </nav>
