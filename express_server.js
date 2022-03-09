@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const { send } = require('express/lib/response');
 
 const PORT = 8080; //default port 8080
 const app = express();
@@ -22,8 +23,14 @@ function generateRandomString() {
 
 // base database for URL
 const urlDatabase = {
-  // "b2xVn2": "http://www.lighthouselabs.ca",
-  // "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  "9sm5xK": {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 // Store User Info
@@ -89,9 +96,15 @@ app.post('/urls', (req, res) => {
     return;
   }
 
+  // The form cannot be empty.
+  if (!req.body.longURL) {
+    res.statusCode = 400;
+    return res.send("Fill out the form!");
+  }
+
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = { longURL: longURL };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -101,20 +114,19 @@ app.get('/urls/new', (req, res) => {
   //redirect to login page if user is not looged in
   if (req.cookies.user_id === undefined) {
     res.redirect('/login');
-    return;
-  }
-
-  const templateVars = {
-    user: users[req.cookies.user_id]
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id]
+    };
+    res.render("urls_new", templateVars);
   };
-  res.render("urls_new", templateVars);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const templateVars = {
     shortURL: shortURL,
-    longURL: urlDatabase[shortURL],
+    longURL: urlDatabase[shortURL].longURL,
     user: users[req.cookies.user_id]
 
   };
@@ -123,8 +135,13 @@ app.get('/urls/:shortURL', (req, res) => {
 
 // Editing/updating longURL
 app.post('/urls/:shortURL', (req, res) => {
+  // the form need to be filled out 
+  if (!req.body.longURL) {
+    res.statusCode = 400;
+    return res.send("Fill out the form!");
+  }
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL].longURL = req.body.longURL;
   res.redirect(`/urls`);
 });
 
@@ -138,8 +155,14 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 // redirect any request to /u/:shortURL to its longURL
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  const shortURL = req.params.shortURL;
+  const urlObject = urlDatabase[shortURL];
+  if (!urlDatabase[shortURL]) {
+    res.send("Invalid input");
+  } else {
+    console.log(urlObject.longURL);
+    res.redirect(urlObject.longURL);
+  }
 });
 
 // render to login page
@@ -159,8 +182,8 @@ app.get('/login', (req, res) => {
 
 // create an endpoint to handle a POST to LOGIN
 app.post('/login', (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  const email = req.body.email.trim();
+  const password = req.body.password.trim();
 
   if (!email || !password) {
     res.statusCode = 400;
@@ -173,17 +196,10 @@ app.post('/login', (req, res) => {
   const emailExists = checkEmail(users, email);
   const passwordExists = checkPassword(users, password);
 
-  // if the email doesn't exist
-  if (!emailExists) {
+  // if the email doesn't exist or f the password doesn't match
+  if (!emailExists || emailExists && !passwordExists) {
     res.statusCode = 403;
-    res.send("You don't have an account with this email.");
-    return;
-  }
-
-  // if the password doesn't match
-  if (emailExists && !passwordExists) {
-    res.statusCode = 403;
-    res.send("Your passowrd doesn't match.");
+    res.send("Invalide credentials");
     return;
   }
 
@@ -213,8 +229,8 @@ app.get('/register', (req, res) => {
 // POST endpoint to register user
 app.post('/register', (req, res) => {
   const userId = generateRandomString();
-  const email = req.body.email;
-  const password = req.body.password;
+  const email = req.body.email.trim();
+  const password = req.body.password.trim();
 
   // create new user object if it's new
   // Handling error, if the form is empty
@@ -226,10 +242,10 @@ app.post('/register', (req, res) => {
 
   const emailExists = checkEmail(users, email);
 
-  // if the email already exists
+  // if the email already exists, error message should not contain details
   if (emailExists) {
     res.statusCode = 400;
-    res.send("You already have an account with this email.");
+    res.send("Invalid credentials.");
     return;
   }
 
@@ -244,7 +260,7 @@ app.post('/register', (req, res) => {
 
 // LOGOUT/clear cookie 
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  res.clearCookie('user_id'); // need name? 
   res.redirect('/urls');
 });
 
