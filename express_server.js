@@ -161,6 +161,13 @@ app.get('/urls/:shortURL', (req, res) => {
 
 // Editing/updating longURL
 app.post('/urls/:shortURL', (req, res) => {
+  // only the owner(creator)of the URL can edit or delete the link 
+  const curUser = users[req.cookies.user_id];
+  if (!curUser || urlDatabase[req.params.shortURL].userID !== curUser.id) {
+    res.statusCode = 400;
+    return res.send("You have no access.");
+  }
+
   // the form need to be filled out 
   if (!req.body.longURL) {
     res.statusCode = 400;
@@ -174,6 +181,13 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // add delete botton
 app.post('/urls/:shortURL/delete', (req, res) => {
+
+  // only the owner(creator)of the URL can edit or delete the link 
+  const curUser = users[req.cookies.user_id];
+  if (!curUser || urlDatabase[req.params.shortURL].userID !== curUser.id) {
+    res.statusCode = 400;
+    return res.send("You have no access.");
+  }
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect('/urls');
