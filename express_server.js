@@ -14,11 +14,6 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-// generate random alphanumeric string with 6 characters, shortURL
-function generateRandomString() {
-  const randomString = Math.random().toString(36).slice(2, 8);
-  return randomString;
-};
 
 
 // base database for URL
@@ -45,6 +40,12 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
+};
+
+// generate random alphanumeric string with 6 characters, shortURL
+function generateRandomString() {
+  const randomString = Math.random().toString(36).slice(2, 8);
+  return randomString;
 };
 
 // Checking if the User email exists or not
@@ -77,10 +78,24 @@ function fetchUserId(userObj, input) {
   return undefined;
 }
 
+// Returning the URLs where the userID is equal to the id of the currenty logged-in user.
+function urlsForUser(id) {
+  const newURLDatabase = {};
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      newURLDatabase[key] = { longURL: urlDatabase[key].longURL, userID: urlDatabase[key].userID };
+    }
+  }
+  return newURLDatabase;
+};
+
 // rendering URLs & entire user object
 app.get('/urls', (req, res) => {
+
+  //urls page will need to filter the entire list in the urlDatabase by comparing the userID with the logged-in user's ID
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies.user_id),
     user: users[req.cookies.user_id],
   };
   res.render("urls_index", templateVars);
@@ -104,7 +119,7 @@ app.post('/urls', (req, res) => {
 
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = { longURL: longURL };
+  urlDatabase[shortURL] = { longURL: longURL, userID: req.cookies.user_id };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -123,14 +138,25 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls/:shortURL', (req, res) => {
+  const curUser = users[req.cookies.user_id];
+
+  // if not logged in, redirect login/register
+  // if not matches the id, send error
+  if (!curUser) {
+    const templateVars = { user: curUser };
+    return res.render('urls_show', templateVars);
+  } else if (urlDatabase[req.params.shortURL].userID !== curUser.id) {
+    res.statusCode = 400;
+    return res.send("Invalid Credentials.");
+  }
+
   const shortURL = req.params.shortURL;
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL,
-    user: users[req.cookies.user_id]
-
+    user: users[req.cookies.user_id],
   };
-  res.render("urls_show", templateVars);
+  res.render('urls_show', templateVars);
 });
 
 // Editing/updating longURL
@@ -158,7 +184,8 @@ app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const urlObject = urlDatabase[shortURL];
   if (!urlDatabase[shortURL]) {
-    res.send("Invalid input");
+    res.statusCode = 404;
+    res.send("The short URL does not exist.");
   } else {
     console.log(urlObject.longURL);
     res.redirect(urlObject.longURL);
@@ -261,7 +288,7 @@ app.post('/register', (req, res) => {
 // LOGOUT/clear cookie 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id'); // need name? 
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 
