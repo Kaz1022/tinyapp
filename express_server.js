@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-// const { send } = require('express/lib/response');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
+
+//helper functions
+const { checkEmail, fetchUserId, urlsForUser } = require('./helpers');
 
 const PORT = 8080; //default port 8080
 const app = express();
@@ -19,8 +21,6 @@ app.use(cookieSession({
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-
 
 // base database for URL
 const urlDatabase = {
@@ -54,54 +54,14 @@ function generateRandomString() {
   return randomString;
 };
 
-// Checking if the User email exists or not
-function checkEmail(userObj, input) {
-  for (const key in userObj) {
-    if (userObj[key].email === input) {
-      return true;
-    }
-  }
-  return false;
-};
-
-// Checking if the User passowrd exists or not
-function checkPassword(userObj, input) {
-  for (const key in userObj) {
-    if (userObj[key].password === input) {
-      return true;
-    }
-  }
-  return false;
-};
-
-// Checking the key of the object which matches the email
-function fetchUserId(userObj, input) {
-  for (const key in userObj) {
-    if (userObj[key].email === input) {
-      return key;
-    }
-  }
-  return undefined;
-}
-
-// Returning the URLs where the userID is equal to the id of the currenty logged-in user.
-function urlsForUser(id) {
-  const newURLDatabase = {};
-  for (const key in urlDatabase) {
-    if (urlDatabase[key].userID === id) {
-      newURLDatabase[key] = { longURL: urlDatabase[key].longURL, userID: urlDatabase[key].userID };
-    }
-  }
-  return newURLDatabase;
-};
-
 // rendering URLs & entire user object
 app.get('/urls', (req, res) => {
 
-  //urls page will need to filter the entire list in the urlDatabase by comparing the userID with the logged-in user's ID
+  // urls page will need to filter the entire list in the urlDatabase 
+  // by comparing the userID with the logged-in user's ID
 
   const templateVars = {
-    urls: urlsForUser(req.session.user_id),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     user: users[req.session.user_id],
   };
   res.render("urls_index", templateVars);
