@@ -39,12 +39,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("1234")
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("5678")
   }
 };
 
@@ -192,27 +192,31 @@ app.post('/login', (req, res) => {
   const password = req.body.password.trim();
 
   if (!email || !password) {
-    res.statusCode = 400;
-    return res.send("You need to fill out both forms.");
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 400,
+      errorMessage: "You need to fill out both forms."
+    };
+  return res.status(400).render('urls_error', templateVars);
   }
 
   // Store checkEmail/checkPassword functions into variables so that 
   // the function doesn't have to run every time
   const emailExists = checkEmail(users, email);
-
-  // if the email doesn't exist 
-  if (!emailExists) {
-    res.statusCode = 403;
-    return res.send("Invalide credentials");
-  }
-
-  // if email exists but the password does not match 
   const userId = fetchUserId(users, email);
   const user = users[userId];
   const hashedPassExists = bcrypt.compareSync(password, user.password);
-  if (emailExists && !hashedPassExists) {
-    res.statusCode = 403;
-    return res.send("Invalid credentials");
+
+  // if the email doesn't exist or the password does not match
+  // **** we are not providing detailed error message such as password does not match
+  // because we don't want to give away too much info for security purposes
+  if (!emailExists || !hashedPassExists) {
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 403,
+      errorMessage: "Invalid credentials."
+    }
+    return res.status(403).render('urls_error', templateVars);
   }
 
   // if the email and password matches
@@ -223,6 +227,7 @@ app.post('/login', (req, res) => {
     res.redirect('/urls');
   }
 });
+
 // render to register page, if logged in redirect /urls
 app.get('/register', (req, res) => {
   if (req.session.user_id === undefined) {
@@ -244,18 +249,24 @@ app.post('/register', (req, res) => {
   // create new user object if it's new
   // Handling error, if the form is empty
   if (!email || !password) {
-    res.statusCode = 400;
-    res.send("You need to fill out both forms.");
-    return;
+    const templateVars = {
+        user: users[req.session.user_id],
+        errorCode: 400,
+        errorMessage: "You need to fill out both forms."
+      };
+    return res.status(400).render('urls_error', templateVars);
   }
 
   const emailExists = checkEmail(users, email);
 
   // if the email already exists, error message should not contain details
   if (emailExists) {
-    res.statusCode = 400;
-    res.send("Invalid credentials.");
-    return;
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 400,
+      errorMessage: "Invalid credentials."
+    };
+  return res.status(400).render('urls_error', templateVars);
   }
 
   // if the email is new

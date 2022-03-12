@@ -8,16 +8,6 @@ const checkEmail = function(userObj, input) {
   return false;
 };
 
-// Checking if the User passowrd exists or not
-// function checkPassword(userObj, input) {
-//   for (const key in userObj) {
-//     if (userObj[key].password === input) {
-//       return true;
-//     }
-//   }
-//   return false;
-// };
-
 // Checking the key of the object which matches the email
 // to fetch UserId
 const fetchUserId = function(userObj, input) {

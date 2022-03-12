@@ -15,6 +15,17 @@ const testUsers = {
   }
 };
 
+const testUrlDatabase = {
+  "b2xVn2": {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  "9sm5xK": {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
+};
+
 describe('checkEmail', function() {
   it('shuold return true the email exists', function() {
     const emailExists = checkEmail(testUsers, "user@example.com")
