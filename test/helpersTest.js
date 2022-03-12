@@ -28,14 +28,14 @@ const testUrlDatabase = {
 
 describe('checkEmail', function() {
   it('shuold return true the email exists', function() {
-    const emailExists = checkEmail(testUsers, "user@example.com")
+    const emailExists = checkEmail(testUsers, "user@example.com");
     const expectedOutput = true;
     assert.equal(emailExists, expectedOutput);
   });
 
   it('shuold return false if the email doesnt exists', function() {
-    const emailExists = checkEmail(testUsers, "abc@example.com")
+    const emailExists = checkEmail(testUsers, "abc@example.com");
     const expectedOutput = false;
     assert.equal(emailExists, expectedOutput);
-  })
+  });
 });
