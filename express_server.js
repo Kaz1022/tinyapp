@@ -72,15 +72,17 @@ app.get('/urls', (req, res) => {
 app.post('/urls', (req, res) => {
   // none logged in user cannot add a new url with POST request
   if (req.session.user_id === undefined) {
-    res.statusCode = 400;
-    res.send("You need to be logged in to use this feature.");
-    return;
+    return res.status(400).send("You need to be logged in to use this feature.");
   }
 
   // The form cannot be empty.
   if (!req.body.longURL) {
-    res.statusCode = 400;
-    return res.send("Fill out the form!");
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 400,
+      errorMessage: "Fill out the form."
+    };
+    return res.status(403).render('urls_error', templateVars);
   }
 
   const shortURL = generateRandomString();
@@ -112,8 +114,12 @@ app.get('/urls/:shortURL', (req, res) => {
     const templateVars = { user: curUser };
     return res.render('urls_show', templateVars);
   } else if (urlDatabase[req.params.shortURL].userID !== curUser.id) {
-    res.statusCode = 400;
-    return res.send("Invalid Credentials.");
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 403,
+      errorMessage: "Invalid credentials."
+    };
+    return res.status(403).render('urls_error', templateVars);
   }
 
   const shortURL = req.params.shortURL;
@@ -128,16 +134,20 @@ app.get('/urls/:shortURL', (req, res) => {
 // Editing/updating longURL
 app.post('/urls/:shortURL', (req, res) => {
   // only the owner(creator)of the URL can edit or delete the link 
+  // prevent the access from terminals using curl
   const curUser = users[req.session.user_id];
   if (!curUser || urlDatabase[req.params.shortURL].userID !== curUser.id) {
-    res.statusCode = 400;
-    return res.send("You have no access.");
+    return res.status(400).send("Access denied.");
   }
 
   // the form need to be filled out 
   if (!req.body.longURL) {
-    res.statusCode = 400;
-    return res.send("Fill out the form!");
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 400,
+      errorMessage: "Fill out the form!"
+    };
+    return res.status(400).render('urls_error', templateVars);
   }
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL].longURL = req.body.longURL;
@@ -149,10 +159,10 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/urls/:shortURL/delete', (req, res) => {
 
   // only the owner(creator)of the URL can edit or delete the link 
+  // prevent the access from terminals using curl
   const curUser = users[req.session.user_id];
   if (!curUser || urlDatabase[req.params.shortURL].userID !== curUser.id) {
-    res.statusCode = 400;
-    return res.send("You have no access.");
+    return res.status(400).send("You have no access.");
   }
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
@@ -164,8 +174,12 @@ app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const urlObject = urlDatabase[shortURL];
   if (!urlDatabase[shortURL]) {
-    res.statusCode = 404;
-    res.send("The short URL does not exist.");
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 404,
+      errorMessage: "The short URL does not exist."
+    };
+    res.status(404).render('urls_error', templateVars);
   } else {
     res.redirect(urlObject.longURL);
   }
@@ -197,7 +211,7 @@ app.post('/login', (req, res) => {
       errorCode: 400,
       errorMessage: "You need to fill out both forms."
     };
-  return res.status(400).render('urls_error', templateVars);
+    return res.status(400).render('urls_error', templateVars);
   }
 
   // Store checkEmail/checkPassword functions into variables so that 
@@ -215,7 +229,7 @@ app.post('/login', (req, res) => {
       user: users[req.session.user_id],
       errorCode: 403,
       errorMessage: "Invalid credentials."
-    }
+    };
     return res.status(403).render('urls_error', templateVars);
   }
 
@@ -250,10 +264,10 @@ app.post('/register', (req, res) => {
   // Handling error, if the form is empty
   if (!email || !password) {
     const templateVars = {
-        user: users[req.session.user_id],
-        errorCode: 400,
-        errorMessage: "You need to fill out both forms."
-      };
+      user: users[req.session.user_id],
+      errorCode: 400,
+      errorMessage: "You need to fill out both forms."
+    };
     return res.status(400).render('urls_error', templateVars);
   }
 
@@ -266,7 +280,7 @@ app.post('/register', (req, res) => {
       errorCode: 400,
       errorMessage: "Invalid credentials."
     };
-  return res.status(400).render('urls_error', templateVars);
+    return res.status(400).render('urls_error', templateVars);
   }
 
   // if the email is new
