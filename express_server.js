@@ -54,6 +54,11 @@ function generateRandomString() {
   return randomString;
 };
 
+// redirect to login page when they access to the home page
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
 // rendering URLs & entire user object
 app.get('/urls', (req, res) => {
 
