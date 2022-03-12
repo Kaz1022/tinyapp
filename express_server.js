@@ -222,14 +222,9 @@ app.post('/login', (req, res) => {
   // Store checkEmail/checkPassword functions into variables so that 
   // the function doesn't have to run every time
   const emailExists = checkEmail(users, email);
-  const userId = fetchUserId(users, email);
-  const user = users[userId];
-  const hashedPassExists = bcrypt.compareSync(password, user.password);
-
-  // if the email doesn't exist or the password does not match
-  // **** we are not providing detailed error message such as password does not match
-  // because we don't want to give away too much info for security purposes
-  if (!emailExists || !hashedPassExists) {
+  
+  // if the email doesn't exist
+  if (!emailExists) {
     const templateVars = {
       user: users[req.session.user_id],
       errorCode: 403,
@@ -237,6 +232,19 @@ app.post('/login', (req, res) => {
     };
     return res.status(403).render('urls_error', templateVars);
   }
+
+  const userId = fetchUserId(users, email);
+  const user = users[userId];
+  const hashedPassExists = bcrypt.compareSync(password, user.password);
+  if (emailExists && !hashedPassExists) {
+    const templateVars = {
+      user: users[req.session.user_id],
+      errorCode: 403,
+      errorMessage: "Invalid credentials."
+    };
+    return res.status(403).render('urls_error', templateVars);
+  }
+
 
   // if the email and password matches
   // create cookie with the user id🍪
